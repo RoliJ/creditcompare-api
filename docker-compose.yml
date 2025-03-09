@@ -1,0 +1,50 @@
+services:
+  symfony_app:
+    build: .
+    container_name: symfony_app
+    restart: always
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8080:80"
+    depends_on:
+      - symfony_mysql
+      - symfony_redis
+
+  symfony_mysql:
+    image: mysql:8
+    container_name: symfony_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: creditcompare
+      MYSQL_USER: symfony
+      MYSQL_PASSWORD: symfony
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  symfony_redis:
+    image: redis:latest
+    container_name: symfony_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: symfony_mysql
+      PMA_USER: symfony
+      PMA_PASSWORD: symfony
+    ports:
+      - "8081:80"
+    depends_on:
+      - symfony_mysql
+
+volumes:
+  mysql_data:

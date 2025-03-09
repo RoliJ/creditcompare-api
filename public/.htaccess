@@ -1,0 +1,7 @@
+# Enable Rewrite Engine
+RewriteEngine On
+
+# If the request is not for a file or directory, rewrite to index.php
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ index.php [QSA,L]
