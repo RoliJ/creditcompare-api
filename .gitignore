@@ -1,4 +1,3 @@
-
 ###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php
@@ -6,6 +5,9 @@
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
 /var/
+# Ignore Symfony cache & logs explicitly
+/var/cache/
+ /var/log/
 /vendor/
 ###< symfony/framework-bundle ###
 
@@ -22,3 +24,19 @@ phpstan.neon
 /phpunit.xml
 /.phpunit.cache/
 ###< phpunit/phpunit ###
+
+###> Docker Files (if using Docker) ###
+/docker-compose.override.yml
+/.docker/
+###< Docker Files ###
+
+###> Ignore Database Files (SQLite, SQL Dumps) ###
+/data/
+/database.sqlite
+*.sql
+###< Database Files ###
+
+###> Ignore Node.js Files (If Frontend Exists in This Repo) ###
+/node_modules/
+/dist/
+###< Node.js ###
