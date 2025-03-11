@@ -26,4 +26,31 @@ class ApiLog
     private string $response;
 
     // Getters and Setters...
+
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    public function getRequestUrl(): string
+    {
+        return $this->requestUrl;
+    }
+
+    public function setRequestUrl(string $requestUrl): self
+    {
+        $this->requestUrl = $requestUrl;
+        return $this;
+    }
+
+    public function getResponse(): string
+    {
+        return $this->response;
+    }
+
+    public function setResponse(string $response): self
+    {
+        $this->response = $response;
+        return $this;
+    }
 }

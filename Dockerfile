@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     && pecl install redis \
     && docker-php-ext-enable redis
 
-# Set ServerName to suppress the warning
+# Set ServerName to suppress warning
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 # Enable Apache Rewrite Module
@@ -23,22 +23,19 @@ RUN echo '<VirtualHost *:80>\n\
     </Directory>\n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
-# Restart Apache after setting up VirtualHost
-RUN service apache2 restart
-
-# Install Composer
+# Install Composer from the official Composer image
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy project files
+# Copy project files into the container
 COPY . .
 
-# Install dependencies
+# Install PHP dependencies
 RUN composer install --no-interaction --optimize-autoloader
 
-# Expose port
+# Expose port 8080 (Apache listens on port 80)
 EXPOSE 8080
 
 # Start Apache server

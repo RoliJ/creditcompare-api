@@ -20,7 +20,7 @@ class CreditCardFeature
     #[ORM\Column(type: "integer")]
     private int $id;
 
-    #[ORM\ManyToOne(targetEntity: CreditCard::class, inversedBy: "images")]
+    #[ORM\ManyToOne(targetEntity: CreditCard::class, inversedBy: "features")]
     #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
     private CreditCard $creditCard;
 
@@ -105,5 +105,318 @@ class CreditCardFeature
     #[ORM\Column(type: "boolean", nullable: true, options: ["default" => 0, "comment" => "kkoffer; 0 = No, 1 = Yes"])]
     private bool $kkOffer;
 
-    // Getters and setters...
+    // Getters and Setters...
+
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    public function getCreditCard(): CreditCard
+    {
+        return $this->creditCard;
+    }
+
+    public function setCreditCard(CreditCard $creditCard): self
+    {
+        $this->creditCard = $creditCard;
+        return $this;
+    }
+
+    public function getLink(): string
+    {
+        return $this->link;
+    }
+
+    public function setLink(string $link): self
+    {
+        $this->link = $link;
+        return $this;
+    }
+
+    public function getTestSeal(): ?string
+    {
+        return $this->testSeal;
+    }
+
+    public function setTestSeal(?string $testSeal): self
+    {
+        $this->testSeal = $testSeal;
+        return $this;
+    }
+
+    public function getTestSealUrl(): ?string
+    {
+        return $this->testSealUrl;
+    }
+
+    public function setTestSealUrl(?string $testSealUrl): self
+    {
+        $this->testSealUrl = $testSealUrl;
+        return $this;
+    }
+
+    public function getNotes(): string
+    {
+        return $this->notes;
+    }
+
+    public function setNotes(string $notes): self
+    {
+        $this->notes = $notes;
+        return $this;
+    }
+
+    public function getRating(): ?float
+    {
+        return $this->rating;
+    }
+
+    public function setRating(?float $rating): self
+    {
+        $this->rating = $rating;
+        return $this;
+    }
+
+    public function getHasEvaluation(): bool
+    {
+        return $this->hasEvaluation;
+    }
+
+    public function setHasEvaluation(bool $hasEvaluation): self
+    {
+        $this->hasEvaluation = $hasEvaluation;
+        return $this;
+    }
+
+    public function getIncentive(): float
+    {
+        return $this->incentive;
+    }
+
+    public function setIncentive(float $incentive): self
+    {
+        $this->incentive = $incentive;
+        return $this;
+    }
+
+    public function getAnnualFees(): float
+    {
+        return $this->annualFees;
+    }
+
+    public function setAnnualFees(float $annualFees): self
+    {
+        $this->annualFees = $annualFees;
+        return $this;
+    }
+
+    public function getAnnualTransactionCosts(): float
+    {
+        return $this->annualTransactionCosts;
+    }
+
+    public function setAnnualTransactionCosts(float $annualTransactionCosts): self
+    {
+        $this->annualTransactionCosts = $annualTransactionCosts;
+        return $this;
+    }
+
+    public function getHasBonusProgram(): bool
+    {
+        return $this->hasBonusProgram;
+    }
+
+    public function setHasBonusProgram(bool $hasBonusProgram): self
+    {
+        $this->hasBonusProgram = $hasBonusProgram;
+        return $this;
+    }
+
+    public function getHasAdditionalInsurance(): bool
+    {
+        return $this->hasAdditionalInsurance;
+    }
+
+    public function setHasAdditionalInsurance(bool $hasAdditionalInsurance): self
+    {
+        $this->hasAdditionalInsurance = $hasAdditionalInsurance;
+        return $this;
+    }
+
+    public function getHasDiscountBenefits(): bool
+    {
+        return $this->hasDiscountBenefits;
+    }
+
+    public function setHasDiscountBenefits(bool $hasDiscountBenefits): self
+    {
+        $this->hasDiscountBenefits = $hasDiscountBenefits;
+        return $this;
+    }
+
+    public function getHasAdditionalServices(): bool
+    {
+        return $this->hasAdditionalServices;
+    }
+
+    public function setHasAdditionalServices(bool $hasAdditionalServices): self
+    {
+        $this->hasAdditionalServices = $hasAdditionalServices;
+        return $this;
+    }
+
+    public function getSpecialFeatures(): ?string
+    {
+        return $this->specialFeatures;
+    }
+
+    public function setSpecialFeatures(?string $specialFeatures): self
+    {
+        $this->specialFeatures = $specialFeatures;
+        return $this;
+    }
+
+    public function getParticipationFee(): ?float
+    {
+        return $this->participationFee;
+    }
+
+    public function setParticipationFee(?float $participationFee): self
+    {
+        $this->participationFee = $participationFee;
+        return $this;
+    }
+
+    public function getParticipationCost(): ?float
+    {
+        return $this->participationCost;
+    }
+
+    public function setParticipationCost(?float $participationCost): self
+    {
+        $this->participationCost = $participationCost;
+        return $this;
+    }
+
+    public function getFirstYearFee(): float
+    {
+        return $this->firstYearFee;
+    }
+
+    public function setFirstYearFee(float $firstYearFee): self
+    {
+        $this->firstYearFee = $firstYearFee;
+        return $this;
+    }
+
+    public function getSecondYearFee(): float
+    {
+        return $this->secondYearFee;
+    }
+
+    public function setSecondYearFee(float $secondYearFee): self
+    {
+        $this->secondYearFee = $secondYearFee;
+        return $this;
+    }
+
+    public function getGcDomesticAtmFee(): ?float
+    {
+        return $this->gcDomesticAtmFee;
+    }
+
+    public function setGcDomesticAtmFee(?float $gcDomesticAtmFee): self
+    {
+        $this->gcDomesticAtmFee = $gcDomesticAtmFee;
+        return $this;
+    }
+
+    public function getGcInternationalAtmFee(): ?float
+    {
+        return $this->gcInternationalAtmFee;
+    }
+
+    public function setGcInternationalAtmFee(?float $gcInternationalAtmFee): self
+    {
+        $this->gcInternationalAtmFee = $gcInternationalAtmFee;
+        return $this;
+    }
+
+    public function getCcDomesticAtmFee(): ?float
+    {
+        return $this->ccDomesticAtmFee;
+    }
+
+    public function setCcDomesticAtmFee(?float $ccDomesticAtmFee): self
+    {
+        $this->ccDomesticAtmFee = $ccDomesticAtmFee;
+        return $this;
+    }
+
+    public function getCcInternationalAtmFee(): ?float
+    {
+        return $this->ccInternationalAtmFee;
+    }
+
+    public function setCcInternationalAtmFee(?float $ccInternationalAtmFee): self
+    {
+        $this->ccInternationalAtmFee = $ccInternationalAtmFee;
+        return $this;
+    }
+
+    public function getIncentiveAmount(): float
+    {
+        return $this->incentiveAmount;
+    }
+
+    public function setIncentiveAmount(float $incentiveAmount): self
+    {
+        $this->incentiveAmount = $incentiveAmount;
+        return $this;
+    }
+
+    public function getInterestRate(): ?float
+    {
+        return $this->interestRate;
+    }
+
+    public function setInterestRate(?float $interestRate): self
+    {
+        $this->interestRate = $interestRate;
+        return $this;
+    }
+
+    public function getShallInterestRate(): ?float
+    {
+        return $this->shallInterestRate;
+    }
+
+    public function setShallInterestRate(?float $shallInterestRate): self
+    {
+        $this->shallInterestRate = $shallInterestRate;
+        return $this;
+    }
+
+    public function getCcEuroAtmFee(): ?float
+    {
+        return $this->ccEuroAtmFee;
+    }
+
+    public function setCcEuroAtmFee(?float $ccEuroAtmFee): self
+    {
+        $this->ccEuroAtmFee = $ccEuroAtmFee;
+        return $this;
+    }
+
+    public function getKkOffer(): bool
+    {
+        return $this->kkOffer;
+    }
+
+    public function setKkOffer(bool $kkOffer): self
+    {
+        $this->kkOffer = $kkOffer;
+        return $this;
+    }
 }

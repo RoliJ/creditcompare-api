@@ -40,4 +40,70 @@ class Bank
     }
 
     // Getters and Setters...
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getBankId(): int
+    {
+        return $this->bankId;
+    }
+
+    public function setBankId(int $bankId): self
+    {
+        $this->bankId = $bankId;
+        return $this;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): self
+    {
+        $this->description = $description;
+        return $this;
+    }
+
+    /**
+     * @return Collection|CreditCard[]
+     */
+    public function getCreditCards(): Collection
+    {
+        return $this->creditCards;
+    }
+
+    public function addCreditCard(CreditCard $creditCard): self
+    {
+        if (!$this->creditCards->contains($creditCard)) {
+            $this->creditCards[] = $creditCard;
+            $creditCard->setBank($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCreditCard(CreditCard $creditCard): self
+    {
+        if ($this->creditCards->removeElement($creditCard)) {
+            // Soft delete the CreditCard entity
+            $creditCard->setDeletedAt(new \DateTime());
+        }
+
+        return $this;
+    }
 }

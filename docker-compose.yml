@@ -46,5 +46,14 @@ services:
     depends_on:
       - symfony_mysql
 
+  symfony_scheduler:
+    build: .  # uses the same Dockerfile as symfony_app
+    container_name: symfony_scheduler
+    working_dir: /var/www/html
+    command: sh -c "while true; do php bin/console messenger:consume scheduler_creditcard_import --time-limit=60 --limit=1; sleep 60; done"
+    depends_on:
+      - symfony_app
+      - symfony_redis
+
 volumes:
   mysql_data:

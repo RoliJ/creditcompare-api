@@ -31,4 +31,42 @@ class CreditCardImage
     private ?string $localPath = null;
 
     // Getters and Setters...
+
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    public function getCreditCard(): CreditCard
+    {
+        return $this->creditCard;
+    }
+
+    public function setCreditCard(CreditCard $creditCard): self
+    {
+        $this->creditCard = $creditCard;
+        return $this;
+    }
+
+    public function getImageUrl(): string
+    {
+        return $this->imageUrl;
+    }
+
+    public function setImageUrl(string $imageUrl): self
+    {
+        $this->imageUrl = $imageUrl;
+        return $this;
+    }
+
+    public function getLocalPath(): ?string
+    {
+        return $this->localPath;
+    }
+
+    public function setLocalPath(?string $localPath): self
+    {
+        $this->localPath = $localPath;
+        return $this;
+    }
 }

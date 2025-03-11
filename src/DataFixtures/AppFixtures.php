@@ -54,8 +54,8 @@ class AppFixtures extends Fixture
         $manager->persist($editable1);
 
         $editable2 = new Editable();
-        $editable2->setTableName('credit_cards');
-        $editable2->setFieldName('description');
+        $editable2->setTableName('credit_card_features');
+        $editable2->setFieldName('notes');
         $manager->persist($editable2);
 
         $editable3 = new Editable();
