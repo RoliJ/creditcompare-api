@@ -12,12 +12,12 @@ class CardTypeEnumType extends Type
     const CREDIT = 'credit';
     const DEBIT = 'debit';
 
-    public function getSQLDeclaration(array $fieldDeclaration, AbstractPlatform $platform)
+    public function getSQLDeclaration(array $fieldDeclaration, AbstractPlatform $platform): string
     {
         return "ENUM('credit', 'debit')";
     }
 
-    public function convertToPHPValue($value, AbstractPlatform $platform)
+    public function convertToPHPValue($value, AbstractPlatform $platform): mixed
     {
         return $value;
     }
