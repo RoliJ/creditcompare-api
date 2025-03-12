@@ -68,9 +68,9 @@ class AppFixtures extends Fixture
         $adminRole->setName('admin');
         $manager->persist($adminRole);
 
-        // 5️⃣ Permissions - CRUD for all tables + Edit CreditCardEdit
+        // 5️⃣ Permissions - CRUD for all tables
         $permissions = [];
-        $tables = ['users', 'roles', 'permissions', 'credit_cards', 'banks', 'card_types', 'currencies', 'editables', 'credit_card_features', 'credit_card_images', 'credit_card_edits', 'api_logs'];
+        $tables = ['users', 'roles', 'permissions', 'credit_cards', 'banks', 'card_types', 'currencies', 'editables', 'credit_card_features', 'credit_card_images', 'api_logs', 'sorting_criteria'];
 
         foreach ($tables as $table) {
             foreach (['create', 'read', 'update', 'delete'] as $action) {

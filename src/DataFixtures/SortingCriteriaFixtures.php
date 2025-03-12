@@ -11,12 +11,11 @@ class SortingCriteriaFixtures extends Fixture
     public function load(ObjectManager $manager): void
     {
         $defaultSorting = [
-            ['table' => 'credit_card_features', 'field' => 'annualFees', 'direction' => 'ASC', 'priority' => 1],
-            ['table' => 'credit_card_features', 'field' => 'annualTransactionCosts', 'direction' => 'ASC', 'priority' => 2],
-            ['table' => 'credit_card_features', 'field' => 'firstYearFee', 'direction' => 'ASC', 'priority' => 3],
-            ['table' => 'credit_card_features', 'field' => 'secondYearFee', 'direction' => 'ASC', 'priority' => 4],
+            ['table' => 'credit_card_features', 'field' => 'annual_fees', 'direction' => 'ASC', 'priority' => 1],
+            ['table' => 'credit_card_features', 'field' => 'annual_transaction_costs', 'direction' => 'ASC', 'priority' => 2],
+            ['table' => 'credit_card_features', 'field' => 'first_year_fee', 'direction' => 'ASC', 'priority' => 3],
+            ['table' => 'credit_card_features', 'field' => 'second_year_fee', 'direction' => 'ASC', 'priority' => 4],
             ['table' => 'credit_card_features', 'field' => 'incentive_amount', 'direction' => 'ASC', 'priority' => 5],
-            ['table' => 'card_types', 'field' => 'name', 'direction' => 'ASC', 'priority' => 6],
         ];
         
 

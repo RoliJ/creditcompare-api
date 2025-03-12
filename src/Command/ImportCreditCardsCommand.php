@@ -8,13 +8,16 @@ use App\Entity\CardType;
 use App\Entity\CreditCard;
 use App\Entity\CreditCardFeature;
 use App\Entity\CreditCardImage;
+use App\Service\CreditCardSorter;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\Validator\Constraints\Length;
 
 #[AsCommand(name: 'app:import-creditcards', description: 'Imports or updates credit cards from API')]
 class ImportCreditCardsCommand extends Command
@@ -22,27 +25,31 @@ class ImportCreditCardsCommand extends Command
     private HttpClientInterface $httpClient;
     private EntityManagerInterface $entityManager;
     private ParameterBagInterface $params;
+    private LoggerInterface $logger;
+    private CreditCardSorter $creditCardSorter;
 
-    public function __construct(HttpClientInterface $httpClient, EntityManagerInterface $entityManager, ParameterBagInterface $params)
+    public function __construct(HttpClientInterface $httpClient, EntityManagerInterface $entityManager, ParameterBagInterface $params, LoggerInterface $logger, CreditCardSorter $creditCardSorter)
     {
         parent::__construct();
         $this->httpClient = $httpClient;
         $this->entityManager = $entityManager;
         $this->params = $params;
+        $this->logger = $logger;
+        $this->creditCardSorter = $creditCardSorter;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $apiUrl = $this->params->get('api_url');
         
-        $output->writeln('<info>Fetching credit card data from API...</info>');
+        $this->logger->info('Fetching credit card data from API...');
         
         try {
             $response = $this->httpClient->request('GET', $apiUrl);
             $statusCode = $response->getStatusCode();
             $content = $response->getContent();
         } catch (\Exception $e) {
-            $output->writeln('<error>Failed to fetch API: ' . $e->getMessage() . '</error>');
+            $this->logger->error('Failed to fetch API: ' . $e->getMessage());
             return Command::FAILURE;
         }
 
@@ -54,18 +61,18 @@ class ImportCreditCardsCommand extends Command
         $this->entityManager->flush();
         
         if ($statusCode !== 200) {
-            $output->writeln('<error>API returned status code ' . $statusCode . '</error>');
+            $this->logger->error('API returned status code ' . $statusCode);
             return Command::FAILURE;
         }
 
         // Parse XML response
         $xml = simplexml_load_string($content);
         if (!$xml) {
-            $output->writeln('<error>Invalid XML response.</error>');
+            $this->logger->error('Invalid XML response.');
             return Command::FAILURE;
         }
 
-        $output->writeln('<info>Processing credit card data...</info>');
+        $this->logger->info('Processing credit card data...');
 
         $this->entityManager->beginTransaction();
 
@@ -77,11 +84,24 @@ class ImportCreditCardsCommand extends Command
             $this->entityManager->commit();
         } catch (\Exception $e) {
             $this->entityManager->rollback();
-            $output->writeln('<error>Failed to process data: ' . $e->getMessage() . '</error>');
+            $this->logger->error('Failed to process data: ' . $e->getMessage());
+            $this->logger->error('Stack trace: ' . $e->getTraceAsString());
             return Command::FAILURE;
         }
 
-        $output->writeln('<info>Import completed successfully.</info>');
+        $this->logger->info('Import completed successfully. Triggering sorting...');
+
+        // Ensure all changes are flushed before starting the new command
+        $this->entityManager->flush();
+
+        try {
+            $this->creditCardSorter->sortAndCacheCreditCards();
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to sort credit cards: ' . $e->getMessage());
+            $this->logger->error('Stack trace: ' . $e->getTraceAsString());
+            return Command::FAILURE;
+        }
+
         return Command::SUCCESS;
     }
 
@@ -104,6 +124,11 @@ class ImportCreditCardsCommand extends Command
         // Check if card exists
         $cardType = $this->entityManager->getRepository(CardType::class)->findOneBy(['name' => (string) $product->cardtype_text]);
         $creditCard = $this->entityManager->getRepository(CreditCard::class)->findOneBy(['productId' => (int) $product->productid]);
+
+        $hasAdminEdition = false;
+        if ($creditCard) {
+            $hasAdminEdition = $creditCard->getHasAdminEdition();
+        }
         
         if (!$creditCard) {
             $creditCard = new CreditCard();
@@ -115,7 +140,7 @@ class ImportCreditCardsCommand extends Command
         } else {
             $creditCard->setCardType($cardType);
             $creditCard->setBank($bank);
-            $creditCard->setName((string) $product->produkt);
+            !$hasAdminEdition ? $creditCard->setName((string) $product->produkt) : $creditCard->setOriginalValue('credit_cards', ['name' => (string) $product->produkt]);
         }
         
         $this->entityManager->flush();
@@ -159,43 +184,43 @@ class ImportCreditCardsCommand extends Command
         if (!$feature) {
             $feature = new CreditCardFeature();
             $feature->setCreditCard($creditCard);
-            $this->setFeatureProperties($feature, $product);
+            $this->setFeatureProperties($feature, $product, $hasAdminEdition);
             $this->entityManager->persist($feature);
         } else {
-            $this->setFeatureProperties($feature, $product);
+            $this->setFeatureProperties($feature, $product, $hasAdminEdition);
         }
         
         $this->entityManager->flush();
     }
 
-    private function setFeatureProperties(CreditCardFeature $feature, $product): void
+    private function setFeatureProperties(CreditCardFeature $feature, $product, bool $hasAdminEdition): void
     {
-        $feature->setLink((string) $product->link);
-        $feature->setTestSeal((string) $product->testsiegel);
-        $feature->setTestSealUrl((string) $product->testsiegel_url);
-        $feature->setNotes((string) $product->anmerkungen);
-        $feature->setRating((float) $product->bewertung);
-        $feature->setHasEvaluation((bool) $product->bewertung_anzahl);
-        $feature->setIncentive((float) $product->incentive);
-        $feature->setAnnualFees((float) $product->gebuehren);
-        $feature->setAnnualTransactionCosts((float) $product->kosten);
-        $feature->setHasBonusProgram((bool) $product->bonusprogram);
-        $feature->setHasAdditionalInsurance((bool) $product->insurances);
-        $feature->setHasDiscountBenefits((bool) $product->benefits);
-        $feature->setHasAdditionalServices((bool) $product->services);
-        $feature->setSpecialFeatures((string) $product->besonderheiten);
-        $feature->setParticipationFee((float) $product->gebuehrenmitaktion);
-        $feature->setParticipationCost((float) $product->kostenmitaktion);
-        $feature->setFirstYearFee((float) $product->gebuehrenjahr1);
-        $feature->setSecondYearFee((float) $product->dauerhaft);
-        $feature->setGcDomesticAtmFee((float) $product->gc_atmfree_domestic);
-        $feature->setGcInternationalAtmFee((float) $product->gc_atmfree_international);
-        $feature->setCcDomesticAtmFee((float) $product->cc_atmfree_domestic);
-        $feature->setCcInternationalAtmFee((float) $product->cc_atmfree_international);
-        $feature->setIncentiveAmount((float) $product->incentive_amount);
-        $feature->setInterestRate((float) $product->habenzins);
-        $feature->setShallInterestRate((float) $product->sollzins);
-        $feature->setCcEuroAtmFee((float) $product->cc_atmfree_euro);
-        $feature->setKkOffer((bool) $product->kkoffer);
+        !$hasAdminEdition ? $feature->setLink((string) $product->link) : $feature->setOriginalValue('credit_card_features', ['link' => (string) $product->link]);
+        !$hasAdminEdition ? $feature->setTestSeal((string) $product->testsiegel) : $feature->setOriginalValue('credit_card_features', ['test_seal' => (string) $product->testsiegel]);
+        !$hasAdminEdition ? $feature->setTestSealUrl((string) $product->testsiegel_url) : $feature->setOriginalValue('credit_card_features', ['test_seal_url' => (string) $product->testsiegel_url]);
+        !$hasAdminEdition ? $feature->setNotes((string) $product->anmerkungen) : $feature->setOriginalValue('credit_card_features', ['notes' => (string) $product->anmerkungen]);
+        !$hasAdminEdition ? $feature->setRating((float) $product->bewertung) : $feature->setOriginalValue('credit_card_features', ['rating' => (float) $product->bewertung]);
+        !$hasAdminEdition ? $feature->setHasEvaluation((bool) $product->bewertung_anzahl) : $feature->setOriginalValue('credit_card_features', ['has_evaluation' => (bool) $product->bewertung_anzahl]);
+        !$hasAdminEdition ? $feature->setIncentive((float) $product->incentive) : $feature->setOriginalValue('credit_card_features', ['incentive' => (float) $product->incentive]);
+        !$hasAdminEdition ? $feature->setAnnualFees((float) $product->gebuehren) : $feature->setOriginalValue('credit_card_features', ['annual_fees' => (float) $product->gebuehren]);
+        !$hasAdminEdition ? $feature->setAnnualTransactionCosts((float) $product->kosten) : $feature->setOriginalValue('credit_card_features', ['annual_transaction_costs' => (float) $product->kosten]);
+        !$hasAdminEdition ? $feature->setHasBonusProgram((bool) $product->bonusprogram) : $feature->setOriginalValue('credit_card_features', ['has_bonus_program' => (bool) $product->bonusprogram]);
+        !$hasAdminEdition ? $feature->setHasAdditionalInsurance((bool) $product->insurances) : $feature->setOriginalValue('credit_card_features', ['has_additional_insurance' => (bool) $product->insurances]);
+        !$hasAdminEdition ? $feature->setHasDiscountBenefits((bool) $product->benefits) : $feature->setOriginalValue('credit_card_features', ['has_discount_benefits' => (bool) $product->benefits]);
+        !$hasAdminEdition ? $feature->setHasAdditionalServices((bool) $product->services) : $feature->setOriginalValue('credit_card_features', ['has_additional_services' => (bool) $product->services]);
+        !$hasAdminEdition ? $feature->setSpecialFeatures((string) $product->besonderheiten) : $feature->setOriginalValue('credit_card_features', ['special_features' => (string) $product->besonderheiten]);
+        !$hasAdminEdition ? $feature->setParticipationFee((float) $product->gebuehrenmitaktion) : $feature->setOriginalValue('credit_card_features', ['participation_fee' => (float) $product->gebuehrenmitaktion]);
+        !$hasAdminEdition ? $feature->setParticipationCost((float) $product->kostenmitaktion) : $feature->setOriginalValue('credit_card_features', ['participation_cost' => (float) $product->kostenmitaktion]);
+        !$hasAdminEdition ? $feature->setFirstYearFee((float) $product->gebuehrenjahr1) : $feature->setOriginalValue('credit_card_features', ['first_year_fee' => (float) $product->gebuehrenjahr1]);
+        !$hasAdminEdition ? $feature->setSecondYearFee((float) $product->dauerhaft) : $feature->setOriginalValue('credit_card_features', ['second_year_fee' => (float) $product->dauerhaft]);
+        !$hasAdminEdition ? $feature->setGcDomesticAtmFee((float) $product->gc_atmfree_domestic) : $feature->setOriginalValue('credit_card_features', ['gc_domestic_atm_fee' => (float) $product->gc_atmfree_domestic]);
+        !$hasAdminEdition ? $feature->setGcInternationalAtmFee((float) $product->gc_atmfree_international) : $feature->setOriginalValue('credit_card_features', ['gc_international_atm_fee' => (float) $product->gc_atmfree_international]);
+        !$hasAdminEdition ? $feature->setCcDomesticAtmFee((float) $product->cc_atmfree_domestic) : $feature->setOriginalValue('credit_card_features', ['cc_domestic_atm_fee' => (float) $product->cc_atmfree_domestic]);
+        !$hasAdminEdition ? $feature->setCcInternationalAtmFee((float) $product->cc_atmfree_international) : $feature->setOriginalValue('credit_card_features', ['cc_international_atm_fee' => (float) $product->cc_atmfree_international]);
+        !$hasAdminEdition ? $feature->setIncentiveAmount((float) $product->incentive_amount) : $feature->setOriginalValue('credit_card_features', ['incentive_amount' => (float) $product->incentive_amount]);
+        !$hasAdminEdition ? $feature->setInterestRate((float) $product->habenzins) : $feature->setOriginalValue('credit_card_features', ['interest_rate' => (float) $product->habenzins]);
+        !$hasAdminEdition ? $feature->setShallInterestRate((float) $product->sollzins) : $feature->setOriginalValue('credit_card_features', ['shall_interest_rate' => (float) $product->sollzins]);
+        !$hasAdminEdition ? $feature->setCcEuroAtmFee((float) $product->cc_atmfree_euro) : $feature->setOriginalValue('credit_card_features', ['cc_euro_atm_fee' => (float) $product->cc_atmfree_euro]);
+        !$hasAdminEdition ? $feature->setKkOffer((bool) $product->kkoffer) : $feature->setOriginalValue('credit_card_features', ['kk_offer' => (bool) $product->kkoffer]);
     }
 }

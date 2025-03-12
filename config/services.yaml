@@ -29,3 +29,10 @@ services:
 
     App\MessageHandler\ImportCreditCardHandler:
         tags: ['messenger.message_handler']
+
+    App\Command\SortCreditCardsCommand:
+        tags: ['console.command']
+
+    App\Service\CreditCardSorter:
+        arguments:
+            $cache: '@cache.app'

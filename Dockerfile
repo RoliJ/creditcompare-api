@@ -35,8 +35,14 @@ COPY . .
 # Install PHP dependencies
 RUN composer install --no-interaction --optimize-autoloader
 
+# Copy entrypoint script
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+
+# Make entrypoint script executable
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 # Expose port 8080 (Apache listens on port 80)
 EXPOSE 8080
 
-# Start Apache server
-CMD ["apache2-foreground"]
+# Set entrypoint
+ENTRYPOINT ["entrypoint.sh"]

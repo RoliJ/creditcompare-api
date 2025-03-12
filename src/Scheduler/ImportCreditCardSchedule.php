@@ -21,8 +21,8 @@ final class ImportCreditCardSchedule implements ScheduleProviderInterface
     {
         return (new Schedule())
             ->add(
-                // @TODO - Modify the frequency to suite your needs
-                RecurringMessage::every('1 hour', new ImportCreditCardMessage()),
+                // Schedule the message to run every day at 2 AM
+                RecurringMessage::cron('0 2 * * *', new ImportCreditCardMessage()),
             )
             ->stateful($this->cache)
         ;

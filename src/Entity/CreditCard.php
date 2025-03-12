@@ -46,6 +46,9 @@ class CreditCard
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private bool $hasAdminEdition = false;
 
+    #[ORM\Column(type: 'json', nullable: true, options: ["comment" => "original_values: Original values of the credit card"])]
+    private ?array $originalValues = null;
+
     #[ORM\OneToMany(targetEntity: CreditCardFeature::class, mappedBy: 'creditCard')]
     private Collection $features;
 
@@ -128,6 +131,36 @@ class CreditCard
     public function setHasAdminEdition(bool $hasAdminEdition): self
     {
         $this->hasAdminEdition = $hasAdminEdition;
+        return $this;
+    }
+
+    public function getOriginalValues(): ?array
+    {
+        return $this->originalValues;
+    }
+
+    public function setOriginalValue(string $table, array $data): self
+    {
+        // Get the current original values, or initialize as an empty array if null.
+        $original = $this->getOriginalValues() ?? [];
+    
+        // If the table key doesn't exist, create it with the new data.
+        if (!isset($original[$table])) {
+            $original[$table] = $data;
+        } else {
+            // If the table key exists, merge the new data.
+            // This will add the key if it doesn't exist or override it if it does.
+            $original[$table] = array_merge($original[$table], $data);
+        }
+    
+        $this->setOriginalValues($original);
+
+        return $this;
+    }
+
+    public function setOriginalValues(?array $values): self
+    {
+        $this->originalValues = $values;
         return $this;
     }
 
