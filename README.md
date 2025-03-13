@@ -1,2 +1,2 @@
 # creditcompare-api
-Credit Card Comparison API (Symfony 6.4, Docker, MySQL, Redis)
+Credit Card Comparison API (Symfony, Docker, MySQL, Redis)
