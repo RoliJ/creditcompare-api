@@ -1,16 +1,6 @@
 #!/bin/sh
 set -e
 
-# If the vendor folder is missing or you want to always ensure dependencies are installed, run composer install
-if [ ! -d "vendor" ]; then
-  echo "Installing composer dependencies..."
-  composer install --no-interaction --optimize-autoloader
-fi
-
-# Optionally, you can always run composer install to ensure dependencies are updated
-# echo "Installing/updating composer dependencies..."
-# composer install --no-interaction --optimize-autoloader
-
 # Run migrations
 echo "Running migrations..."
 php bin/console doctrine:migrations:migrate --no-interaction

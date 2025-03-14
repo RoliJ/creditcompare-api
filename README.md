@@ -83,7 +83,8 @@ The installation process is fully automated with Docker. Running the provided `d
 - Load predefined fixture data for testing and development.
 - Automatically import credit card data into the database after setup is complete.
 
-This ensures a streamlined setup and allows for quick deployment in various environments. However, since all steps, including the data import, run automatically, the initial startup process may take longer. This trade-off prioritizes a one-command setup over speed, ensuring everything is ready to use without manual intervention.
+This ensures a streamlined one-command setup and allows for quick deployment in various environments, ensuring everything is ready to use without manual intervention.
+
 ## 9. Future Enhancements
 - **Machine Learning-Based Recommendation Engine** to suggest the best credit cards based on user behavior.
 - **Additional Filtering Options** to enhance user experience.

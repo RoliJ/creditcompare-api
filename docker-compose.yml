@@ -6,6 +6,7 @@ services:
     working_dir: /var/www/html
     volumes:
       - .:/var/www/html
+      - /var/www/html/vendor
     ports:
       - "8080:80"
     depends_on:
@@ -25,6 +26,11 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   symfony_redis:
     image: redis:latest
@@ -50,10 +56,14 @@ services:
     build: .  # uses the same Dockerfile as symfony_app
     container_name: symfony_scheduler
     working_dir: /var/www/html
-    command: sh -c "while true; do php bin/console messenger:consume scheduler_creditcard_import --time-limit=60 --limit=1; sleep 60; done"
+    command: sh -c "until mysqladmin ping -h symfony_mysql --silent; do sleep 5; done && php bin/console messenger:consume scheduler_creditcard_import --time-limit=60 --limit=1; sleep 60;"
     depends_on:
-      - symfony_app
-      - symfony_redis
+      symfony_app:
+        condition: service_started
+      symfony_mysql:
+        condition: service_healthy
+      symfony_redis:
+        condition: service_started
 
 volumes:
   mysql_data:
